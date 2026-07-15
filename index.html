@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Vocab Trainer — Leaders 300</title>
+
+<!-- Home-screen / PWA setup -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#16233a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vocab Trainer">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+
+<style>
+  :root{
+    --wood-dark:#16233a;
+    --wood-mid:#1f3155;
+    --paper:#eef2f8;
+    --paper-shadow:#c3d2e8;
+    --ink:#1c2e4a;
+    --ink-light:#2d4570;
+    --stamp-red:#c0392b;
+    --stamp-green:#2e9e5b;
+    --pencil:#2a3548;
+    --muted:#66799a;
+    --accent:#3567b7;
+    --accent-hover:#4779c9;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    background:
+      radial-gradient(ellipse at 50% 0%, var(--wood-mid) 0%, var(--wood-dark) 60%),
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.08) 0px, rgba(0,0,0,0.08) 1px, transparent 1px, transparent 26px);
+    background-color:var(--wood-dark);
+    min-height:100vh;
+    min-height:100dvh;
+    font-family: -apple-system, 'Segoe UI', Arial, Helvetica, sans-serif;
+    font-size:17px;
+    color:var(--pencil);
+    display:flex;
+    justify-content:center;
+    padding:max(28px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(60px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+    overscroll-behavior-y:contain;
+    -webkit-tap-highlight-color:transparent;
+  }
+  button, .choice, .mode-card{
+    touch-action:manipulation;
+    -webkit-touch-callout:none;
+  }
+  input.recall-input{ -webkit-user-select:text; }
+  .wrap{width:100%;max-width:640px;}
+  .masthead{
+    text-align:center;
+    color:#dbe6f5;
+    margin-bottom:22px;
+  }
+  .masthead .kicker{
+    font-family:inherit;
+    letter-spacing:3px;
+    font-size:13px;
+    color:#9fb8e0;
+    text-transform:uppercase;
+    font-weight:600;
+  }
+  .masthead h1{
+    font-size:34px;
+    margin:6px 0 2px;
+    font-weight:700;
+    letter-spacing:0.2px;
+  }
+  .masthead .sub{
+    font-family:inherit;
+    font-size:14px;
+    color:#7f93b8;
+  }
+  .card{
+    background:var(--paper);
+    border-radius:2px;
+    box-shadow: 0 14px 0 -6px var(--paper-shadow), 0 18px 30px rgba(10,20,40,0.45);
+    padding:26px 26px 22px;
+    position:relative;
+    background-image:
+      linear-gradient(var(--paper), var(--paper)),
+      repeating-linear-gradient(180deg, transparent 0 33px, rgba(60,90,150,0.08) 34px);
+  }
+  .card::before{
+    content:"";
+    position:absolute; left:22px; top:0; bottom:0; width:1px;
+    background:rgba(53,103,183,0.35);
+  }
+  .catalog-row{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:inherit; font-size:13px; letter-spacing:0.5px; font-weight:600;
+    color:var(--muted); text-transform:uppercase; margin-bottom:14px;
+    border-bottom:1px dashed #b8c8e0; padding-bottom:8px;
+  }
+  h2.section-title{
+    font-family:inherit;
+    font-size:15px; letter-spacing:1px; text-transform:uppercase; font-weight:700;
+    color:var(--ink); margin:0 0 14px;
+  }
+  .btn{
+    font-family:inherit;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    font-size:15px;
+    font-weight:600;
+    background:var(--accent);
+    color:#f5f9ff;
+    border:none;
+    padding:12px 16px;
+    border-radius:6px;
+    cursor:pointer;
+    transition:transform .08s ease, background .15s ease;
+  }
+  .btn:hover{background:var(--accent-hover);}
+  .btn:active{transform:translateY(1px);}
+  .btn.secondary{background:transparent;color:var(--ink);border:1px solid var(--ink);}
+  .btn.secondary:hover{background:rgba(47,62,99,0.08);}
+  .btn.red{background:var(--stamp-red);}
+  .btn.red:hover{background:#b8493a;}
+  .btn.green{background:var(--stamp-green);}
+  .btn.green:hover{background:#4c7c58;}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
+
+  .mode-grid{display:flex;flex-direction:column;gap:14px;margin-top:6px;}
+  .mode-card{
+    border:1px solid #c3d2e8; padding:16px 16px 14px; border-radius:2px;
+    display:flex; justify-content:space-between; align-items:center; gap:14px;
+    cursor:pointer; background:rgba(255,255,255,0.15);
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .mode-card:hover{background:rgba(255,255,255,0.35); border-color:var(--ink);}
+  .mode-card .mtitle{font-size:20px;color:var(--ink);margin:0 0 4px;font-weight:700;}
+  .mode-card .mdesc{font-family:inherit;font-size:14px;color:var(--muted);line-height:1.5;}
+  .mode-card .mnum{font-family:inherit;font-size:24px;color:var(--paper-shadow);font-weight:700;}
+  .stats-line{font-family:inherit;font-size:14px;color:var(--muted);margin-top:18px;text-align:center;}
+
+  .word-display{text-align:center;margin:18px 0 10px;}
+  .pos-tag{
+    display:inline-block; font-family:inherit; font-size:13px;
+    color:var(--muted); border:1px dashed #b8c8e0; padding:2px 8px; border-radius:10px;
+    margin-bottom:10px; text-transform:lowercase;
+  }
+  .word-display .word{font-size:42px; color:var(--ink); letter-spacing:0.2px; font-weight:700;}
+  input.recall-input{
+    width:100%; margin-top:14px; font-family:inherit;
+    font-size:18px; padding:12px; border:1px solid #b7c8e0; border-radius:2px;
+    background:#f7fafd; color:var(--pencil); resize:vertical;
+  }
+  .reveal-box{
+    margin-top:16px; padding:16px 16px 14px; background:#dbe6f5; border-left:3px solid var(--ink);
+    font-size:18px; line-height:1.6;
+  }
+  .reveal-box .def-num{color:var(--ink); font-weight:bold;}
+  .reveal-box .sentence{margin-top:10px; font-style:italic; color:#4a5a78; font-size:16px;}
+  .feedback-banner{
+    display:flex; align-items:center; gap:12px;
+    padding:14px 16px; border-radius:10px;
+    font-weight:800; font-size:19px;
+    margin-bottom:14px;
+    animation: popIn .38s cubic-bezier(.34,1.56,.64,1);
+  }
+  .feedback-banner .icon{
+    width:34px; height:34px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; color:#fff;
+    animation: iconPop .45s cubic-bezier(.34,1.56,.64,1) .05s both;
+  }
+  .feedback-banner.correct{background:#e2f6ea; color:#1f7a43; box-shadow:0 6px 16px rgba(46,158,91,0.25);}
+  .feedback-banner.correct .icon{background:var(--stamp-green);}
+  .feedback-banner.incorrect{background:#fbe8e6; color:#a3392b; box-shadow:0 6px 16px rgba(192,57,43,0.2);
+    animation: popIn .3s ease, shake .4s ease .32s;}
+  .feedback-banner.incorrect .icon{background:var(--stamp-red);}
+  @keyframes popIn{
+    0%{transform:scale(.7) translateY(6px); opacity:0;}
+    65%{transform:scale(1.06) translateY(0); opacity:1;}
+    100%{transform:scale(1);}
+  }
+  @keyframes iconPop{
+    0%{transform:scale(0);} 70%{transform:scale(1.25);} 100%{transform:scale(1);}
+  }
+  @keyframes shake{
+    10%,90%{transform:translateX(-2px);}
+    20%,80%{transform:translateX(3px);}
+    30%,50%,70%{transform:translateX(-5px);}
+    40%,60%{transform:translateX(5px);}
+  }
+
+  .choice-list{display:flex; flex-direction:column; gap:9px; margin-top:16px;}
+  .choice{
+    text-align:left; padding:14px 15px; border:1px solid #b7c8e0; border-radius:2px;
+    background:#f7fafd; cursor:pointer; font-family:inherit; font-size:17px; color:var(--pencil);
+  }
+  .choice:hover{border-color:var(--ink);}
+  .choice.correct{border-color:var(--stamp-green); background:#e3ecdf; color:#254a30;}
+  .choice.wrong{border-color:var(--stamp-red); background:#f2e0da; color:#6e2a20;}
+  .choice.disabled{cursor:default;}
+
+  .progress-bar{height:5px; background:#d3ddef; border-radius:3px; overflow:hidden; margin:16px 0 4px;}
+  .progress-fill{height:100%; background:var(--accent);}
+  .progress-label{font-family:inherit; font-size:13px; color:var(--muted); text-align:right;}
+
+  .timer{font-family:inherit; font-size:18px; color:var(--stamp-red); text-align:right; font-weight:700;}
+
+  .diag-score{font-size:48px; color:var(--ink); text-align:center; margin:6px 0 2px; font-weight:700;}
+  .diag-sub{text-align:center; font-family:inherit; font-size:15px; color:var(--muted); margin-bottom:18px;}
+  .missed-list{display:flex; flex-wrap:wrap; gap:7px; margin-top:8px;}
+  .missed-chip{
+    font-family:inherit; font-size:14px; background:#dbe6f5;
+    border:1px solid #b7c8e0; color:var(--pencil); padding:5px 10px; border-radius:12px;
+  }
+  .back-link{
+    display:inline-block; margin-top:20px; font-family:inherit;
+    font-size:14px; color:var(--muted); cursor:pointer; text-decoration:underline;
+  }
+  .back-link:hover{color:var(--ink);}
+  .len-row{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;}
+  .record-note{font-family:inherit; font-size:14px; color:var(--muted); text-align:center; margin-top:10px;}
+  ::selection{background:#c3d6f0;}
+  @media(max-width:480px){
+    body{padding-left:10px; padding-right:10px;}
+    .masthead h1{font-size:28px;}
+    .card{padding:18px 14px 16px; border-radius:14px;}
+    .word-display .word{font-size:30px;}
+    .btn{padding:14px 16px; font-size:14px;}
+    .mode-card{padding:14px;}
+    .mode-card .mtitle{font-size:17px;}
+    .choice{padding:15px 14px;}
+    .catalog-row{font-size:11.5px;}
+    .diag-score{font-size:40px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="masthead">
+    <div class="kicker" id="kicker-label">Leaders</div>
+    <h1>Vocab Trainer</h1>
+    <div class="sub" id="range-label"></div>
+  </div>
+  <div class="card" id="app"></div>
+</div>
+
+<script>
+/* ============ CONFIG (update these as the word list grows) ============
+   Leaders 300 → 1–100, 1–200, 1–300
+   Leaders 500 Final → 1–100 ... 1–500
+   Leaders Advanced (414) → 1–70, 1–140 ... 1–414
+*/
+const BOOK_LABEL = "Leaders 300";
+const RANGE_LABEL = "Words 1–100";
+
+/* ============ WORD DATABASE ============ */
+const WORDS = [
+{w:"indifferent",pos:"adj.",defs:["uninterested; unconcerned; apathetic","neither good nor bad; mediocre"],sent:"Despite the passionate debate, he remained indifferent to the outcome."},
+{w:"perceive",pos:"v.",defs:["to notice; to become aware of","to interpret in a particular way"],sent:"Critics perceived the novel's ending as unnecessarily bleak."},
+{w:"insufficient",pos:"adj.",defs:["not enough; inadequate"],sent:"The evidence was insufficient to support her claim."},
+{w:"derive",pos:"v.",defs:["to trace or obtain from a source","to trace the origin of"],sent:"The word 'biology' derives from Greek roots."},
+{w:"aesthetic",pos:"adj.",defs:["relating to beauty; artistic","a set of principles about art and beauty"],sent:"The museum's minimalist aesthetic emphasizes empty space over ornamentation."},
+{w:"depict",pos:"v.",defs:["to portray; to represent in words; art; images"],sent:"The mural depicts the city's founding in vivid color."},
+{w:"assert",pos:"v.",defs:["to state confidently; to declare","to exercise or defend a right"],sent:"She asserted her authority during the meeting."},
+{w:"abundance",pos:"n.",defs:["a very large quantity; plentifulness"],sent:"The region enjoys an abundance of natural resources."},
+{w:"unfounded",pos:"adj.",defs:["having no basis in fact; groundless"],sent:"The rumors about the merger proved to be unfounded."},
+{w:"accumulate",pos:"v.",defs:["to gather over time; to amass"],sent:"Interest on the loan will accumulate rapidly if left unpaid."},
+{w:"abstract",pos:"adj.",defs:["theoretical; not concrete","a summary of a text"],sent:"Justice is an abstract concept that philosophers have debated for centuries."},
+{w:"induce",pos:"v.",defs:["to cause; to bring about","to persuade"],sent:"The medication was designed to induce sleep."},
+{w:"discrepancy",pos:"n.",defs:["a difference; an inconsistency"],sent:"Auditors found a discrepancy between the two financial reports."},
+{w:"inhibit",pos:"v.",defs:["to prevent; to restrain; to hinder"],sent:"Cold temperatures inhibit the growth of bacteria."},
+{w:"overlook",pos:"v.",defs:["to fail to notice; to ignore","to have a view from above"],sent:"The editor overlooked a glaring typo on the cover."},
+{w:"robust",pos:"adj.",defs:["strong; sturdy; vigorous"],sent:"The bridge was built with a robust steel frame to survive earthquakes."},
+{w:"acknowledge",pos:"v.",defs:["to accept; admit the truth of","to recognize the importance of"],sent:"The company acknowledged its mistake and issued a refund."},
+{w:"inherent",pos:"adj.",defs:["existing as a natural, permanent quality; built-in"],sent:"Risk is inherent in any new business venture."},
+{w:"acclaim",pos:"n./v.",defs:["enthusiastic praise","to praise enthusiastically"],sent:"The film received widespread critical acclaim."},
+{w:"subsequent",pos:"adj.",defs:["coming after; following in time"],sent:"The subsequent chapters explain the theory in greater detail."},
+{w:"undermine",pos:"v.",defs:["to weaken; to damage gradually"],sent:"Constant criticism began to undermine her confidence."},
+{w:"crucial",pos:"adj.",defs:["extremely important; decisive"],sent:"Sleep plays a crucial role in memory formation."},
+{w:"enhance",pos:"v.",defs:["to improve; to increase in quality"],sent:"The new lighting enhances the room's warm atmosphere."},
+{w:"abandon",pos:"v.",defs:["to give up completely; to leave behind"],sent:"The sailors were forced to abandon ship."},
+{w:"empirical",pos:"adj.",defs:["based on observation; not theory"],sent:"The scientist favored empirical evidence over speculation."},
+{w:"mitigate",pos:"v.",defs:["to make less severe; to lessen the impact"],sent:"New regulations aim to mitigate the risk of flooding."},
+{w:"prevalent",pos:"adj.",defs:["widespread; commonly occurring"],sent:"Obesity has become increasingly prevalent in industrialized nations."},
+{w:"protagonist",pos:"n.",defs:["the main character; a leading figure"],sent:"The protagonist must choose between loyalty and ambition."},
+{w:"vulnerable",pos:"adj.",defs:["exposed to harm; easily attacked"],sent:"Coastal towns are especially vulnerable to rising sea levels."},
+{w:"heterogeneous",pos:"adj.",defs:["diverse; composed of different kinds"],sent:"The class was a heterogeneous mix of students from different backgrounds."},
+{w:"innovative",pos:"adj.",defs:["introducing new ideas; creative"],sent:"The startup's innovative approach disrupted the entire industry."},
+{w:"unequivocal",pos:"adj.",defs:["leaving no doubt; clear; unambiguous"],sent:"The judge gave an unequivocal ruling that ended the dispute."},
+{w:"controversial",pos:"adj.",defs:["causing disagreement; sparking debate"],sent:"The senator's controversial remarks sparked national outrage."},
+{w:"exploit",pos:"v.",defs:["to use selfishly; to take advantage of","a bold or notable achievement"],sent:"The factory was accused of exploiting its workers."},
+{w:"nocturnal",pos:"adj.",defs:["active at night"],sent:"Owls are nocturnal predators with excellent night vision."},
+{w:"prominent",pos:"adj.",defs:["important; well-known; standing out"],sent:"A prominent scientist led the research team."},
+{w:"enduring",pos:"adj.",defs:["lasting; continuing for a long time"],sent:"Their friendship proved enduring despite the distance."},
+{w:"viable",pos:"adj.",defs:["capable of working successfully; feasible"],sent:"The committee approved the plan as a viable solution to the budget crisis."},
+{w:"abrupt",pos:"adj.",defs:["sudden; unexpected; curt"],sent:"The meeting came to an abrupt end when the fire alarm sounded."},
+{w:"elaborate",pos:"adj./v.",defs:["detailed and complex","to explain in more detail"],sent:"She asked him to elaborate on his proposal."},
+{w:"impede",pos:"v.",defs:["to hinder; to obstruct; to slow down"],sent:"Heavy traffic impeded the ambulance's route to the hospital."},
+{w:"obscure",pos:"adj./v.",defs:["not well known; hard to understand","to make unclear; to hide"],sent:"Thick fog obscured the view of the mountains."},
+{w:"prolific",pos:"adj.",defs:["highly productive; producing much"],sent:"The prolific author published over forty novels in her career."},
+{w:"sustain",pos:"v.",defs:["to maintain; to keep going; to endure"],sent:"The economy struggled to sustain its rapid growth."},
+{w:"scope",pos:"n.",defs:["the range; the extent"],sent:"The investigation's scope expanded to include three additional companies."},
+{w:"compelling",pos:"adj.",defs:["powerfully convincing; fascinating"],sent:"The lawyer presented a compelling argument to the jury."},
+{w:"comprehensive",pos:"adj.",defs:["thorough; including everything"],sent:"The report offers a comprehensive analysis of the market."},
+{w:"corroborate",pos:"v.",defs:["to confirm; to support with evidence"],sent:"Witness testimony corroborated the police officer's account."},
+{w:"deliberate",pos:"adj./v.",defs:["intentional; done on purpose","to think carefully about"],sent:"The jury deliberated for six hours before reaching a verdict."},
+{w:"nuance",pos:"n.",defs:["a subtle difference; a fine distinction"],sent:"The translator struggled to capture every nuance of the original poem."},
+{w:"predominant",pos:"adj.",defs:["most common; having the greatest influence"],sent:"Blue is the predominant color in the painting."},
+{w:"sophisticated",pos:"adj.",defs:["complex; cultured; worldly"],sent:"The lab uses sophisticated equipment to analyze DNA samples."},
+{w:"subtle",pos:"adj.",defs:["delicate; hard to notice; not obvious"],sent:"There was a subtle shift in her tone during the interview."},
+{w:"coherent",pos:"adj.",defs:["logical; consistent; clear"],sent:"He struggled to give a coherent explanation for his absence."},
+{w:"concede",pos:"v.",defs:["to admit; to yield; to surrender"],sent:"She conceded that her original plan had flaws."},
+{w:"consensus",pos:"n.",defs:["general agreement"],sent:"The committee reached a consensus after hours of debate."},
+{w:"optimal",pos:"adj.",defs:["the best; most favorable; ideal"],sent:"Researchers determined the optimal dosage for the medication."},
+{w:"skeptical",pos:"adj.",defs:["doubtful; not easily convinced"],sent:"Investors remained skeptical of the company's inflated projections."},
+{w:"speculate",pos:"v.",defs:["to guess; to theorize without firm evidence"],sent:"Analysts speculated about the reasons behind the sudden stock drop."},
+{w:"suppress",pos:"v.",defs:["to put an end to forcibly; to hold back"],sent:"The government moved to suppress the protests."},
+{w:"advocate",pos:"v./n.",defs:["to publicly support; to recommend","a person who supports a cause"],sent:"The doctor advocated for stricter food safety laws."},
+{w:"allude",pos:"v.",defs:["to indirectly hint at"],sent:"In her speech, she alluded to a scandal without naming names."},
+{w:"analogous",pos:"adj.",defs:["comparable; similar in certain respects"],sent:"The heart's function is analogous to that of a pump."},
+{w:"candid",pos:"adj.",defs:["truthful; straightforward; frank"],sent:"The coach gave a candid assessment of the team's weaknesses."},
+{w:"counteract",pos:"v.",defs:["to work against; to neutralize"],sent:"Regular exercise can counteract the effects of a poor diet."},
+{w:"inconsequential",pos:"adj.",defs:["unimportant; trivial"],sent:"The typo was inconsequential and didn't affect the report's meaning."},
+{w:"intricate",pos:"adj.",defs:["very complex; detailed; elaborate"],sent:"The watch contains an intricate arrangement of tiny gears."},
+{w:"manifest",pos:"v./adj.",defs:["clear and obvious","to show; to demonstrate clearly"],sent:"Her anxiety began to manifest itself in physical symptoms."},
+{w:"refute",pos:"v.",defs:["to prove wrong; to deny with evidence"],sent:"The scientist presented data to refute the earlier claim."},
+{w:"underscore",pos:"v.",defs:["to emphasize; to highlight"],sent:"The report's findings underscore the need for immediate reform."},
+{w:"bolster",pos:"v.",defs:["to support; to strengthen; to reinforce"],sent:"New statistics helped bolster the senator's argument."},
+{w:"contemplate",pos:"v.",defs:["to think deeply about; to consider"],sent:"She sat by the window, contemplating her next career move."},
+{w:"contradict",pos:"v.",defs:["to deny the truth of; to be inconsistent with"],sent:"His testimony seemed to contradict the evidence found at the scene."},
+{w:"diminish",pos:"v.",defs:["to make smaller; to reduce"],sent:"Her influence in the company diminished after the merger."},
+{w:"elicit",pos:"v.",defs:["to draw out a response; to evoke"],sent:"The comedian's joke elicited laughter from the entire audience."},
+{w:"luminous",pos:"adj.",defs:["bright; giving off light; brilliant"],sent:"The luminous glow of the fireflies lit up the field."},
+{w:"preclude",pos:"v.",defs:["to prevent; to make impossible"],sent:"His prior commitment precluded him from attending the conference."},
+{w:"restrain",pos:"v.",defs:["to hold back; to control; to limit"],sent:"It took two officers to restrain the unruly crowd."},
+{w:"substantiate",pos:"v.",defs:["to provide evidence for; to prove"],sent:"The lawyer failed to substantiate his client's alibi."},
+{w:"ambiguous",pos:"adj.",defs:["having more than one meaning; unclear"],sent:"The contract's ambiguous wording led to a legal dispute."},
+{w:"articulate",pos:"v./adj.",defs:["able to express thoughts clearly","to express clearly"],sent:"The young student was remarkably articulate for her age."},
+{w:"augment",pos:"v.",defs:["to increase; to supplement; to make greater"],sent:"The company hired freelancers to augment its regular staff."},
+{w:"conclusive",pos:"adj.",defs:["decisive; putting an end to doubt"],sent:"The DNA test provided conclusive proof of his innocence."},
+{w:"conjecture",pos:"n.",defs:["a guess based on incomplete evidence"],sent:"Without more data, the theory remains pure conjecture."},
+{w:"credible",pos:"adj.",defs:["believable; trustworthy"],sent:"The witness gave a credible account of the accident."},
+{w:"cultivate",pos:"v.",defs:["to develop; to nurture; to grow"],sent:"The teacher worked hard to cultivate her students' curiosity."},
+{w:"encompass",pos:"v.",defs:["to include; to surround; to cover entirely"],sent:"The new policy encompasses all departments in the company."},
+{w:"epitomize",pos:"v.",defs:["to be a perfect example of; to embody"],sent:"Her tireless work ethic epitomizes the company's core values."},
+{w:"equivocal",pos:"adj.",defs:["ambiguous; open to multiple interpretations"],sent:"The politician's equivocal answer left reporters unsatisfied."},
+{w:"feasible",pos:"adj.",defs:["possible; practical; achievable"],sent:"Engineers determined the bridge design was structurally feasible."},
+{w:"implicit",pos:"adj.",defs:["implied but not stated; absolute"],sent:"There was an implicit agreement that no one would discuss the topic."},
+{w:"melancholy",pos:"n./adj.",defs:["deep sadness; a gloomy state of mind"],sent:"A melancholy mood settled over the house after the funeral."},
+{w:"paradigm",pos:"n.",defs:["a model; a framework; a typical example"],sent:"The discovery represented a paradigm shift in modern physics."},
+{w:"pretentious",pos:"adj.",defs:["trying to appear more important than one is"],sent:"Critics dismissed the film as pretentious and self-indulgent."},
+{w:"subjective",pos:"adj.",defs:["based on personal feelings; not facts"],sent:"Taste in music is highly subjective."},
+{w:"ubiquitous",pos:"adj.",defs:["present everywhere; found constantly"],sent:"Smartphones have become ubiquitous in modern society."},
+{w:"unprecedented",pos:"adj.",defs:["never done before; without precedent"],sent:"The pandemic caused unprecedented disruption to global trade."},
+{w:"accommodate",pos:"v.",defs:["to provide space for; to adjust to"],sent:"The hotel can accommodate up to five hundred guests."},
+{w:"breadth",pos:"n.",defs:["the extent; the range; width"],sent:"The professor was praised for the breadth of his knowledge."},
+{w:"compensate",pos:"v.",defs:["to make up for; to pay for services"],sent:"The airline agreed to compensate passengers for the delayed flight."}
+];
+WORDS.forEach((w,i)=>w.id=i);
+
+/* ============ STORAGE HELPERS ============ */
+async function loadMastery(){
+  try{
+    const r = await window.storage.get('mastery');
+    return r ? JSON.parse(r.value) : {};
+  }catch(e){ return {}; }
+}
+async function saveMastery(m){
+  try{ await window.storage.set('mastery', JSON.stringify(m)); }catch(e){}
+}
+async function loadRecords(){
+  try{
+    const r = await window.storage.get('speedRecords');
+    return r ? JSON.parse(r.value) : {};
+  }catch(e){ return {}; }
+}
+async function saveRecords(r){
+  try{ await window.storage.set('speedRecords', JSON.stringify(r)); }catch(e){}
+}
+async function loadLastMissed(){
+  try{
+    const r = await window.storage.get('lastMissed');
+    return r ? JSON.parse(r.value) : [];
+  }catch(e){ return []; }
+}
+async function saveLastMissed(arr){
+  try{ await window.storage.set('lastMissed', JSON.stringify(arr)); }catch(e){}
+}
+
+let MASTERY = {};
+let RECORDS = {};
+
+/* ============ UTIL ============ */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function pickRandomOthers(excludeId, count){
+  const pool = WORDS.filter(w=>w.id!==excludeId);
+  return shuffle(pool).slice(0,count);
+}
+function blankSentence(wordObj){
+  const re = new RegExp(wordObj.w+"\\w*", "i");
+  return wordObj.sent.replace(re, "_____");
+}
+function fmtDefs(wordObj){
+  return wordObj.defs.map((d,i)=>{
+    const num = wordObj.defs.length>1 ? `<span class="def-num">${i+1}.</span> ` : "";
+    return num+d;
+  }).join("<br>");
+}
+function numLabel(wordObj){
+  return "#"+(wordObj.id+1);
+}
+function norm(s){
+  return s.toLowerCase().replace(/[.,!?;:]+$/,"").trim();
+}
+// Splits a definition string like "uninterested; unconcerned; apathetic"
+// into its list of interchangeable synonym phrases.
+function synonymsOf(defStr){
+  return defStr.split(";").map(s=>norm(s)).filter(Boolean);
+}
+// Checks whether a chunk of user text contains at least one of the
+// definition's synonym phrases as a substring (case-insensitive).
+function chunkMatchesDef(chunk, defStr){
+  const c = norm(chunk);
+  if(!c) return false;
+  return synonymsOf(defStr).some(syn => syn.length>0 && c.includes(syn));
+}
+// Splits user input on leading numbering like "1." "2)" etc.
+// Returns array of trimmed text chunks (no numbering).
+function splitNumberedInput(input){
+  const parts = input.split(/\d+[\.\)]\s*/).map(s=>s.trim()).filter(Boolean);
+  return parts;
+}
+// Full answer checker for the "write the meaning" text-entry modes.
+// Returns true/false. Handles 1-def and 2-def (multi-def) words per the
+// rule: any listed synonym counts, and numbering/order don't need to match
+// the book as long as each definition is covered by a distinct answer chunk.
+function checkAnswer(input, wordObj){
+  if(!input || !input.trim()) return false;
+  const defs = wordObj.defs;
+  if(defs.length===1){
+    return chunkMatchesDef(input, defs[0]);
+  }
+  // multi-definition: need N distinct chunks, each covering a different def
+  let chunks = splitNumberedInput(input);
+  if(chunks.length < defs.length){
+    // fallback: allow splitting on newlines if user didn't number
+    chunks = input.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+  }
+  if(chunks.length !== defs.length) return false;
+  // try to find a bijection between chunks and defs (order-independent)
+  function backtrack(chunkIdx, remainingDefs, used){
+    if(chunkIdx === chunks.length) return remainingDefs.length===0;
+    const chunk = chunks[chunkIdx];
+    for(let i=0;i<remainingDefs.length;i++){
+      if(chunkMatchesDef(chunk, remainingDefs[i])){
+        const rest = remainingDefs.slice(0,i).concat(remainingDefs.slice(i+1));
+        if(backtrack(chunkIdx+1, rest, used)) return true;
+      }
+    }
+    return false;
+  }
+  return backtrack(0, defs, []);
+}
+function bumpMastery(id, correct){
+  if(!MASTERY[id]) MASTERY[id]={seen:0,correct:0,incorrect:0};
+  MASTERY[id].seen++;
+  if(correct) MASTERY[id].correct++; else MASTERY[id].incorrect++;
+  saveMastery(MASTERY);
+}
+function weakWordIds(){
+  return WORDS.filter(w=>{
+    const m = MASTERY[w.id];
+    return m && m.incorrect > m.correct;
+  }).map(w=>w.id);
+}
+
+/* ============ APP STATE / ROUTER ============ */
+const app = document.getElementById('app');
+
+async function boot(){
+  document.getElementById('kicker-label').textContent = BOOK_LABEL;
+  document.getElementById('range-label').textContent = RANGE_LABEL + " · " + WORDS.length + " words loaded";
+  MASTERY = await loadMastery();
+  RECORDS = await loadRecords();
+  renderHome();
+}
+
+function totalIntroduced(){
+  // number of distinct words ever seen
+  return Object.keys(MASTERY).length;
+}
+
+async function renderHome(){
+  const introduced = totalIntroduced();
+  const weak = weakWordIds().length;
+  app.innerHTML = `
+    <div class="catalog-row"><span>${BOOK_LABEL}</span><span>${RANGE_LABEL} · ${WORDS.length} words</span></div>
+    <h2 class="section-title">Choose a mode</h2>
+    <div class="mode-grid">
+      <div class="mode-card" id="m-learn">
+        <div><div class="mtitle">Learning Mode</div>
+        <div class="mdesc">Words are introduced one at a time.<br>Type the exact definition, auto-graded. Never the same word twice in a row.</div></div>
+        <div class="mnum">01</div>
+      </div>
+      <div class="mode-card" id="m-test">
+        <div><div class="mtitle">Full Practice Test</div>
+        <div class="mdesc">All ${WORDS.length} words, in order.<br>Type the exact definition, auto-graded.</div></div>
+        <div class="mnum">02</div>
+      </div>
+      <div class="mode-card" id="m-retake">
+        <div><div class="mtitle">Retake (Fill-in-the-Blank)</div>
+        <div class="mdesc">Auto-graded, 4 choices.<br>Uses words you missed last test (or pick your own set).</div></div>
+        <div class="mnum">03</div>
+      </div>
+      <div class="mode-card" id="m-speed">
+        <div><div class="mtitle">Speed Round</div>
+        <div class="mdesc">Type the definition against the clock.<br>Chase your personal best time.</div></div>
+        <div class="mnum">04</div>
+      </div>
+      <div class="mode-card" id="m-quiz">
+        <div><div class="mtitle">Quiz Practice</div>
+        <div class="mdesc">10 random words, typed &amp; auto-graded.<br>A quick mock of the real cram school quiz.</div></div>
+        <div class="mnum">05</div>
+      </div>
+    </div>
+    <div class="stats-line">Introduced: ${introduced}/${WORDS.length} &nbsp;·&nbsp; Words needing review: ${weak}</div>
+  `;
+  document.getElementById('m-learn').onclick = startLearning;
+  document.getElementById('m-test').onclick = ()=>startFullTest();
+  document.getElementById('m-retake').onclick = startRetakeSetup;
+  document.getElementById('m-speed').onclick = startSpeedSetup;
+  document.getElementById('m-quiz').onclick = startQuizPractice;
+}
+
+/* ============ LEARNING MODE ============ */
+let learnState = null;
+function startLearning(){
+  learnState = {
+    pool: [WORDS[0].id],
+    nextToAdd: 1,
+    sinceAdd: 0,
+    lastAsked: null,
+    answered: 0,
+    correct: 0,
+    missed: new Set(),
+    sessionSeen: new Set(),
+    weights: { [WORDS[0].id]: 1 },
+    forceNextId: null
+  };
+  learningRound();
+}
+// Weighted random pick: words with higher weight (recently missed) come up
+// more often, but every word in the pool always has at least a baseline
+// chance, so nothing gets forgotten.
+function weightedPick(poolIds, excludeId, weights){
+  let candidates = poolIds.filter(id=>id!==excludeId);
+  if(candidates.length===0) candidates = poolIds.slice();
+  const weighted = candidates.map(id=>({id, w: Math.max(0.0001, weights[id]||1)}));
+  const total = weighted.reduce((sum,c)=>sum+c.w,0);
+  let r = Math.random()*total;
+  for(const c of weighted){
+    r -= c.w;
+    if(r<=0) return c.id;
+  }
+  return weighted[weighted.length-1].id;
+}
+function learningRound(){
+  const s = learnState;
+  let id;
+  let isFreshIntro = false;
+  if(s.forceNextId !== null){
+    id = s.forceNextId;
+    s.forceNextId = null;
+    isFreshIntro = true;
+  } else {
+    id = weightedPick(s.pool, s.lastAsked, s.weights);
+  }
+  s.lastAsked = id;
+  s.sessionSeen.add(id);
+  const word = WORDS[id];
+  const hint = word.defs.length>1 ? `2 definitions — answer both, e.g. "1. ... 2. ..."` : `Type the definition`;
+  app.innerHTML = `
+    <div class="catalog-row"><span>Learning Mode</span><span>Pool: ${s.pool.length}/${WORDS.length} introduced</span></div>
+    <div class="word-display">
+      <div class="pos-tag">${numLabel(word)} · ${word.pos}${isFreshIntro? ' · <span style="color:var(--accent);">NEW</span>':''}</div>
+      <div class="word">${word.w}</div>
+    </div>
+    <input type="text" class="recall-input" id="recall" placeholder="${hint}" autocomplete="off">
+    <div class="btn-row">
+      <button class="btn" id="check-btn">Check Answer</button>
+      <button class="btn secondary" id="end-btn">End Session</button>
+    </div>
+    <div id="reveal-slot"></div>
+  `;
+  const recallEl = document.getElementById('recall');
+  recallEl.focus();
+  document.getElementById('end-btn').onclick = ()=>learningDiagnostics();
+  function doCheck(){
+    const val = recallEl.value;
+    const correct = checkAnswer(val, word);
+    recallEl.disabled = true;
+    document.getElementById('check-btn').disabled = true;
+    document.getElementById('reveal-slot').innerHTML = `
+      <div class="feedback-banner ${correct?'correct':'incorrect'}">
+        <div class="icon">${correct?'✓':'✕'}</div>
+        <div>${correct?'Correct!':'Not quite'}</div>
+      </div>
+      <div class="reveal-box">
+        ${fmtDefs(word)}
+        <div class="sentence">"${word.sent}"</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="next-btn">Next Word</button>
+      </div>
+    `;
+    bumpMastery(id, correct);
+    document.getElementById('next-btn').onclick = ()=>{ recordLearningResult(id, correct); };
+    document.getElementById('next-btn').focus();
+  }
+  document.getElementById('check-btn').onclick = doCheck;
+  recallEl.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); doCheck(); }
+  });
+}
+function recordLearningResult(id, correct){
+  const s = learnState;
+  s.answered++;
+  if(correct){
+    s.correct++;
+    s.weights[id] = Math.max(1, (s.weights[id]||1) - 1);
+  } else {
+    s.missed.add(id);
+    s.weights[id] = (s.weights[id]||1) + 4;
+  }
+  gradeLearning(id, correct);
+}
+function gradeLearning(id, correct){
+  const s = learnState;
+  s.sinceAdd++;
+  if(s.sinceAdd>=3 && s.nextToAdd<WORDS.length){
+    const newId = WORDS[s.nextToAdd].id;
+    s.pool.push(newId);
+    s.weights[newId] = 1;
+    s.nextToAdd++;
+    s.sinceAdd=0;
+    s.forceNextId = newId; // guarantee the freshly-added word is shown next
+  }
+  learningRound();
+}
+function learningDiagnostics(){
+  const s = learnState;
+  const pct = s.answered? Math.round(100*s.correct/s.answered) : 0;
+  const missedIds = [...s.missed];
+  app.innerHTML = `
+    <div class="catalog-row"><span>Learning Mode</span><span>Session Diagnostics</span></div>
+    <div class="diag-score">${pct}%</div>
+    <div class="diag-sub">${s.correct} / ${s.answered} known on first recall</div>
+    <h2 class="section-title" style="margin-top:20px;">Words introduced this session</h2>
+    <div class="diag-sub" style="text-align:left;font-size:14px;">${s.sessionSeen.size} of ${WORDS.length} total words now introduced (${s.pool.length}/${WORDS.length} in your active pool)</div>
+    ${missedIds.length? `<h2 class="section-title" style="margin-top:20px;">Needs review</h2><div class="missed-list">${missedIds.map(id=>`<span class="missed-chip">${numLabel(WORDS[id])} ${WORDS[id].w}</span>`).join('')}</div>` : ''}
+    <div class="btn-row">
+      <button class="btn" id="again">Continue Learning</button>
+      <button class="btn secondary" id="home">Back to Menu</button>
+    </div>
+  `;
+  document.getElementById('again').onclick = startLearning;
+  document.getElementById('home').onclick = renderHome;
+}
+
+/* ============ FULL TEST MODE ============ */
+let testState = null;
+function startFullTest(ids, opts){
+  opts = opts || {};
+  const order = ids && ids.length ? ids.slice() : WORDS.map(w=>w.id);
+  testState = { idx:0, correct:0, missed:[], order, label: opts.label || 'Full Practice Test', isQuiz: !!opts.isQuiz };
+  fullTestRound();
+}
+function startQuizPractice(){
+  const n = Math.min(10, WORDS.length);
+  const ids = shuffle(WORDS.map(w=>w.id)).slice(0,n);
+  startFullTest(ids, {label:'Quiz Practice', isQuiz:true});
+}
+function fullTestRound(){
+  const s = testState;
+  if(s.idx>=s.order.length){ return fullTestDiagnostics(); }
+  const id = s.order[s.idx];
+  const word = WORDS[id];
+  const hint = word.defs.length>1 ? `2 definitions — answer both, e.g. "1. ... 2. ..."` : `Write the meaning`;
+  app.innerHTML = `
+    <div class="catalog-row"><span>${s.label}</span><span>Card ${s.idx+1} / ${s.order.length}</span></div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${(s.idx/s.order.length)*100}%"></div></div>
+    <div class="word-display">
+      <div class="pos-tag">${numLabel(word)} · ${word.pos}</div>
+      <div class="word">${word.w}</div>
+    </div>
+    <input type="text" class="recall-input" id="recall" placeholder="${hint}" autocomplete="off">
+    <div class="btn-row">
+      <button class="btn" id="check-btn">Check Answer</button>
+    </div>
+    <div id="reveal-slot"></div>
+  `;
+  const recallEl = document.getElementById('recall');
+  recallEl.focus();
+  function doCheck(){
+    const val = recallEl.value;
+    const correct = checkAnswer(val, word);
+    recallEl.disabled = true;
+    document.getElementById('check-btn').disabled = true;
+    document.getElementById('reveal-slot').innerHTML = `
+      <div class="feedback-banner ${correct?'correct':'incorrect'}">
+        <div class="icon">${correct?'✓':'✕'}</div>
+        <div>${correct?'Correct!':'Not quite'}</div>
+      </div>
+      <div class="reveal-box">
+        ${fmtDefs(word)}
+        <div class="sentence">"${word.sent}"</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="next-btn">Next Word</button>
+      </div>
+    `;
+    document.getElementById('next-btn').onclick = ()=>gradeFullTest(id,correct);
+    document.getElementById('next-btn').focus();
+  }
+  document.getElementById('check-btn').onclick = doCheck;
+  recallEl.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); doCheck(); }
+  });
+}
+function gradeFullTest(id, correct){
+  const s = testState;
+  bumpMastery(id, correct);
+  if(correct) s.correct++; else s.missed.push(id);
+  s.idx++;
+  fullTestRound();
+}
+async function fullTestDiagnostics(){
+  const s = testState;
+  const pct = Math.round(100*s.correct/s.order.length);
+  await saveLastMissed(s.missed);
+  app.innerHTML = `
+    <div class="catalog-row"><span>${s.label}</span><span>Diagnostics</span></div>
+    <div class="diag-score">${pct}%</div>
+    <div class="diag-sub">${s.correct} / ${s.order.length} correct</div>
+    ${s.missed.length? `<h2 class="section-title" style="margin-top:20px;">Missed (${s.missed.length})</h2><div class="missed-list">${s.missed.map(id=>`<span class="missed-chip">${numLabel(WORDS[id])} ${WORDS[id].w}</span>`).join('')}</div>` : '<div class="diag-sub" style="margin-top:14px;">No misses. Full marks.</div>'}
+    <div class="btn-row">
+      ${s.missed.length? `<button class="btn red" id="retest-missed">Practice Test — Missed Words Only</button>` : ''}
+      <button class="btn secondary" id="again">${s.isQuiz? 'New Quiz (10 Random)' : 'Retest All '+s.order.length}</button>
+      <button class="btn secondary" id="home">Back to Menu</button>
+    </div>
+  `;
+  if(s.missed.length) document.getElementById('retest-missed').onclick = ()=>startFullTest(s.missed);
+  document.getElementById('again').onclick = s.isQuiz ? startQuizPractice : (()=>startFullTest(s.order, {label:s.label}));
+  document.getElementById('home').onclick = renderHome;
+}
+
+/* ============ RETAKE MODE (fill-in-blank, MC) ============ */
+async function startRetakeSetup(){
+  const lastMissed = await loadLastMissed();
+  app.innerHTML = `
+    <div class="catalog-row"><span>Retake</span><span>Fill-in-the-blank · auto-graded</span></div>
+    <h2 class="section-title">Choose word set</h2>
+    <div class="mode-grid">
+      <div class="mode-card" id="r-missed">
+        <div><div class="mtitle">Last Missed Words</div>
+        <div class="mdesc">${lastMissed.length} word(s) from your last Full Test</div></div>
+        <div class="mnum">${lastMissed.length}</div>
+      </div>
+      <div class="mode-card" id="r-weak">
+        <div><div class="mtitle">All Weak Words</div>
+        <div class="mdesc">Words where incorrect answers outnumber correct</div></div>
+        <div class="mnum">${weakWordIds().length}</div>
+      </div>
+      <div class="mode-card" id="r-all">
+        <div><div class="mtitle">All ${WORDS.length} Words</div>
+        <div class="mdesc">Full blank-fill run, shuffled order</div></div>
+        <div class="mnum">${WORDS.length}</div>
+      </div>
+    </div>
+    <div class="back-link" id="home">← back to menu</div>
+  `;
+  document.getElementById('r-missed').onclick = ()=>{
+    if(lastMissed.length===0){ return; }
+    beginRetake(lastMissed);
+  };
+  document.getElementById('r-weak').onclick = ()=>{
+    const w = weakWordIds();
+    if(w.length===0){ return; }
+    beginRetake(w);
+  };
+  document.getElementById('r-all').onclick = ()=>beginRetake(WORDS.map(w=>w.id));
+  document.getElementById('home').onclick = renderHome;
+}
+let retakeState = null;
+function beginRetake(ids){
+  retakeState = { order: shuffle(ids), idx:0, correct:0, missed:[] };
+  retakeRound();
+}
+function retakeRound(){
+  const s = retakeState;
+  if(s.idx>=s.order.length){ return retakeDiagnostics(); }
+  const id = s.order[s.idx];
+  const word = WORDS[id];
+  const distractors = pickRandomOthers(id,3);
+  const choices = shuffle([word, ...distractors]);
+  app.innerHTML = `
+    <div class="catalog-row"><span>Retake</span><span>Card ${s.idx+1} / ${s.order.length}</span></div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${(s.idx/s.order.length)*100}%"></div></div>
+    <div class="pos-tag">${numLabel(word)}</div>
+    <div class="reveal-box" style="margin-top:8px;">${blankSentence(word)}</div>
+    <div class="choice-list" id="choices">
+      ${choices.map(c=>`<div class="choice" data-w="${c.w}">${c.w}</div>`).join('')}
+    </div>
+  `;
+  document.querySelectorAll('.choice').forEach(el=>{
+    el.onclick = ()=>{
+      document.querySelectorAll('.choice').forEach(c2=>c2.classList.add('disabled'));
+      const chosen = el.getAttribute('data-w');
+      const correct = chosen===word.w;
+      document.querySelectorAll('.choice').forEach(c2=>{
+        if(c2.getAttribute('data-w')===word.w) c2.classList.add('correct');
+        else if(c2===el) c2.classList.add('wrong');
+      });
+      bumpMastery(id, correct);
+      if(correct) s.correct++; else s.missed.push(id);
+      setTimeout(()=>{ s.idx++; retakeRound(); }, 700);
+    };
+  });
+}
+async function retakeDiagnostics(){
+  const s = retakeState;
+  const pct = Math.round(100*s.correct/s.order.length);
+  await saveLastMissed(s.missed);
+  app.innerHTML = `
+    <div class="catalog-row"><span>Retake</span><span>Diagnostics</span></div>
+    <div class="diag-score">${pct}%</div>
+    <div class="diag-sub">${s.correct} / ${s.order.length} correct</div>
+    ${s.missed.length? `<h2 class="section-title" style="margin-top:20px;">Still shaky</h2><div class="missed-list">${s.missed.map(id=>`<span class="missed-chip">${numLabel(WORDS[id])} ${WORDS[id].w}</span>`).join('')}</div>` : '<div class="diag-sub" style="margin-top:14px;">Clean sweep.</div>'}
+    <div class="btn-row">
+      ${s.missed.length? `<button class="btn red" id="again">Retake Missed Again</button>` : ''}
+      <button class="btn secondary" id="home">Back to Menu</button>
+    </div>
+  `;
+  if(s.missed.length) document.getElementById('again').onclick = ()=>beginRetake(s.missed);
+  document.getElementById('home').onclick = renderHome;
+}
+
+/* ============ SPEED MODE ============ */
+function startSpeedSetup(){
+  app.innerHTML = `
+    <div class="catalog-row"><span>Speed Round</span><span>Typed · timed</span></div>
+    <h2 class="section-title">Choose length</h2>
+    <div class="len-row">
+      <button class="btn" data-n="20">20 words</button>
+      <button class="btn" data-n="50">50 words</button>
+      <button class="btn" data-n="100">100 words</button>
+    </div>
+    <div class="record-note">${recordsSummary()}</div>
+    <div class="back-link" id="home">← back to menu</div>
+  `;
+  document.querySelectorAll('.len-row .btn').forEach(b=>{
+    b.onclick = ()=>beginSpeed(parseInt(b.getAttribute('data-n')));
+  });
+  document.getElementById('home').onclick = renderHome;
+}
+function recordsSummary(){
+  const parts = [20,50,100].map(n=>{
+    const r = RECORDS[n];
+    return `${n}w best: ${r? r.toFixed(1)+'s' : '—'}`;
+  });
+  return parts.join('   ·   ');
+}
+let speedState = null;
+function beginSpeed(n){
+  const ids = shuffle(WORDS.map(w=>w.id)).slice(0,n);
+  speedState = { order:ids, idx:0, correct:0, missed:[], n, start: performance.now(), timerInterval:null };
+  speedRound();
+}
+function speedRound(){
+  const s = speedState;
+  if(s.idx>=s.order.length){ return speedDiagnostics(); }
+  const id = s.order[s.idx];
+  const word = WORDS[id];
+  app.innerHTML = `
+    <div class="catalog-row"><span>Speed Round</span><span>${s.idx+1} / ${s.order.length}</span></div>
+    <div class="timer" id="timer">0.0s</div>
+    <div class="word-display" style="margin:10px 0;">
+      <div class="pos-tag">${numLabel(word)} · ${word.pos}</div>
+      <div class="word">${word.w}</div>
+    </div>
+    <input type="text" class="recall-input" id="recall" placeholder="Type the definition, press Enter..." autocomplete="off">
+  `;
+  if(s.timerInterval) clearInterval(s.timerInterval);
+  s.timerInterval = setInterval(()=>{
+    const el = document.getElementById('timer');
+    if(el) el.textContent = ((performance.now()-s.start)/1000).toFixed(1)+'s';
+  }, 100);
+  const recallEl = document.getElementById('recall');
+  recallEl.focus();
+  recallEl.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      const correct = checkAnswer(recallEl.value, word);
+      bumpMastery(id, correct);
+      if(correct) s.correct++; else s.missed.push(id);
+      s.idx++;
+      speedRound();
+    }
+  });
+}
+async function speedDiagnostics(){
+  const s = speedState;
+  if(s.timerInterval) clearInterval(s.timerInterval);
+  const totalSec = (performance.now()-s.start)/1000;
+  const pct = Math.round(100*s.correct/s.order.length);
+  const prevBest = RECORDS[s.n];
+  let isRecord = false;
+  if(s.correct===s.order.length && (!prevBest || totalSec<prevBest)){
+    RECORDS[s.n]=totalSec;
+    await saveRecords(RECORDS);
+    isRecord = true;
+  }
+  app.innerHTML = `
+    <div class="catalog-row"><span>Speed Round</span><span>${s.n} words</span></div>
+    <div class="diag-score">${totalSec.toFixed(1)}s</div>
+    <div class="diag-sub">${s.correct} / ${s.order.length} correct (${pct}%)${isRecord? ' — NEW PERSONAL BEST':''}</div>
+    ${s.missed.length? `<h2 class="section-title" style="margin-top:20px;">Missed</h2><div class="missed-list">${s.missed.map(id=>`<span class="missed-chip">${numLabel(WORDS[id])} ${WORDS[id].w}</span>`).join('')}</div>` : ''}
+    <div class="record-note">${recordsSummary()}</div>
+    <div class="btn-row">
+      <button class="btn" id="again">Run It Back</button>
+      <button class="btn secondary" id="home">Back to Menu</button>
+    </div>
+  `;
+  document.getElementById('again').onclick = ()=>beginSpeed(s.n);
+  document.getElementById('home').onclick = renderHome;
+}
+
+boot();
+</script>
+</body>
+</html>
