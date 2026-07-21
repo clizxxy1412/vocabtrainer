@@ -581,16 +581,127 @@ const WORDS = [
 {w:"versatile",pos:"adj.",defs:["adaptable to many functions; flexible"],sent:"The versatile actor can play both comedic and dramatic roles."},
 {w:"volatile",pos:"adj.",defs:["likely to change rapidly; unstable; explosive"],sent:"The volatile stock market made investors nervous."}
 ];
+
+/* ============ LEADERS 500 FINAL — words 1-100 ============
+   A separate, standalone list (not a continuation of Leaders 300),
+   so definitions are kept exact even where a word also appears above.
+*/
+const LEADERS500_WORDS = [
+{w:"conventional",pos:"adj.",defs:["traditional; ordinary"],sent:"Her conventional approach to teaching left little room for creative experimentation."},
+{w:"undermine",pos:"v.",defs:["to weaken; to damage gradually"],sent:"Repeated leaks began to undermine the public's trust in the agency."},
+{w:"dismissive",pos:"adj.",defs:["rejecting; condescending; showing contempt"],sent:"He gave a dismissive wave and walked away without answering the question."},
+{w:"aesthetic",pos:"adj.",defs:["relating to beauty; pleasing in appearance"],sent:"The designer chose a minimalist aesthetic for the new storefront."},
+{w:"objective",pos:"adj.",defs:["factual; unbiased; impersonal"],sent:"The reporter tried to remain objective despite her personal opinions on the issue."},
+{w:"reconcile",pos:"v.",defs:["restore harmony; settle a dispute; make compatible"],sent:"It took months for the two business partners to reconcile after their dispute."},
+{w:"subtle",pos:"adj.",defs:["not obvious; slight; difficult to perceive"],sent:"A subtle change in her tone revealed that something was wrong."},
+{w:"accessible",pos:"adj.",defs:["reachable; obtainable; easy to understand"],sent:"The museum redesigned its exhibits to make the material more accessible to children."},
+{w:"decorum",pos:"n.",defs:["proper behavior; good taste; orderliness"],sent:"Guests were expected to maintain decorum throughout the formal ceremony."},
+{w:"impulsive",pos:"adj.",defs:["acting suddenly without thought; spontaneous"],sent:"His impulsive decision to quit his job surprised everyone at the office."},
+{w:"deride",pos:"v.",defs:["mock; ridicule; scorn"],sent:"Critics were quick to deride the film as shallow and poorly written."},
+{w:"suppress",pos:"v.",defs:["to stifle; to restrain; to prevent"],sent:"The government tried to suppress news of the factory's failures."},
+{w:"complacent",pos:"adj.",defs:["self-satisfied; smug; unconcerned"],sent:"After years of success, the company grew complacent and stopped innovating."},
+{w:"reverent",pos:"adj.",defs:["deeply respectful; worshipful"],sent:"Visitors spoke in reverent whispers as they toured the old cathedral."},
+{w:"disparage",pos:"v.",defs:["criticize negatively; belittle; undervalue"],sent:"He refused to disparage his former coach, even after being cut from the team."},
+{w:"relevant",pos:"adj.",defs:["pertinent; related to the matter at hand"],sent:"The lawyer questioned whether the old testimony was still relevant to the case."},
+{w:"prudent",pos:"adj.",defs:["cautious; careful; wise"],sent:"A prudent investor keeps some savings in reserve for emergencies."},
+{w:"refute",pos:"v.",defs:["to disprove; to prove wrong"],sent:"The professor presented data to refute the students' initial hypothesis."},
+{w:"inevitable",pos:"adj.",defs:["unavoidable; certain to happen"],sent:"With sales falling for the third straight quarter, cutbacks seemed inevitable."},
+{w:"innocuous",pos:"adj.",defs:["harmless; inoffensive"],sent:"What seemed like an innocuous comment ended up causing a huge argument."},
+{w:"convey",pos:"v.",defs:["transport; communicate; transmit (ideas)"],sent:"The ambassador's speech conveyed a sense of cautious optimism."},
+{w:"profound",pos:"adj.",defs:["deep; intense; significant"],sent:"Losing his mentor had a profound effect on the young musician."},
+{w:"ironic",pos:"adj.",defs:["unexpectedly contrary; satirical; mocking"],sent:"It was ironic that the fire station itself burned down."},
+{w:"ambivalent",pos:"adj.",defs:["having opposing feelings"],sent:"She felt ambivalent about moving to a new city for the promotion."},
+{w:"pragmatic",pos:"adj.",defs:["practical; concerned with results, not ideals"],sent:"Rather than debate theory, the manager took a pragmatic approach to the problem."},
+{w:"innovative",pos:"adj.",defs:["new; original; introducing change"],sent:"The startup's innovative packaging reduced waste by nearly half."},
+{w:"rational",pos:"adj.",defs:["based on reason; logical"],sent:"Even under pressure, the pilot made a rational decision to abort the landing."},
+{w:"abstract",pos:"adj.",defs:["theoretical; not concrete; conceptual"],sent:"Freedom is an abstract idea that means different things to different people."},
+{w:"distinct",pos:"adj.",defs:["clearly different; separate; noticeable"],sent:"The two wines had distinct flavors despite coming from the same vineyard."},
+{w:"felicitous",pos:"adj.",defs:["apt; well-chosen; appropriate","pleasant; delightful"],sent:"Her felicitous choice of words made the toast memorable."},
+{w:"resolute",pos:"adj.",defs:["determined; firm; unwavering"],sent:"The team remained resolute even after losing their first three matches."},
+{w:"diverse",pos:"adj.",defs:["differing; varied; various"],sent:"The panel included a diverse group of scientists, artists, and historians."},
+{w:"trivial",pos:"adj.",defs:["unimportant; insignificant; minor"],sent:"He dismissed the missing receipt as a trivial detail."},
+{w:"discern",pos:"v.",defs:["perceive; recognize; detect"],sent:"It was hard to discern any pattern in the scattered data."},
+{w:"enhance",pos:"v.",defs:["increase; improve; intensify"],sent:"New lighting fixtures enhanced the gallery's overall atmosphere."},
+{w:"redundant",pos:"adj.",defs:["unnecessary; superfluous; repetitive"],sent:"The editor cut several redundant phrases from the final draft."},
+{w:"tempered",pos:"adj.",defs:["moderated; softened; made less intense"],sent:"His tempered response calmed the tense negotiation."},
+{w:"dubious",pos:"adj.",defs:["doubtful; questionable; uncertain"],sent:"The salesman's claims about the product's benefits seemed dubious."},
+{w:"depict",pos:"v.",defs:["portray; represent; describe"],sent:"The mural depicts workers building the railroad."},
+{w:"compelling",pos:"adj.",defs:["forceful; fascinating; captivating","highly persuasive"],sent:"The documentary offered a compelling case for reforming the parole system."},
+{w:"indifferent",pos:"adj.",defs:["unconcerned; uninterested","mediocre; average"],sent:"The cat seemed indifferent to the commotion happening around it."},
+{w:"embellish",pos:"v.",defs:["decorate; adorn; add details (sometimes falsely)"],sent:"He tends to embellish his stories whenever he retells them."},
+{w:"supplant",pos:"v.",defs:["replace; take the place of"],sent:"Online retailers have largely supplanted small neighborhood shops."},
+{w:"fabricate",pos:"v.",defs:["build; create","invent falsely; lie"],sent:"The employee was fired after admitting he had fabricated the sales figures."},
+{w:"plausible",pos:"adj.",defs:["believable; reasonable; seemingly true"],sent:"Her alibi seemed plausible, but detectives kept digging anyway."},
+{w:"parallel",pos:"adj.",defs:["similar; analogous","equidistant apart"],sent:"The two rivers run roughly parallel for several miles before diverging."},
+{w:"eradicate",pos:"v.",defs:["eliminate completely; destroy; root out"],sent:"The campaign hoped to eradicate the disease within a decade."},
+{w:"dominant",pos:"adj.",defs:["most important; powerful; controlling"],sent:"The team's dominant defense held opponents scoreless for six straight games."},
+{w:"deleterious",pos:"adj.",defs:["harmful; damaging"],sent:"The report warned of the deleterious effects of the chemical on local wildlife."},
+{w:"discord",pos:"n.",defs:["disagreement; conflict; lack of harmony"],sent:"The inheritance dispute created lasting discord within the family."},
+{w:"futile",pos:"adj.",defs:["useless, ineffective; pointless"],sent:"Attempts to repair the old engine proved futile."},
+{w:"indulgent",pos:"adj.",defs:["lenient; overly generous, permissive"],sent:"Grandparents are often more indulgent than parents when it comes to sweets."},
+{w:"indignant",pos:"adj.",defs:["angry at unfairness; offended by injustice"],sent:"She grew indignant when accused of cheating on the exam."},
+{w:"eclectic",pos:"adj.",defs:["selecting from various sources; diverse"],sent:"His apartment was filled with an eclectic mix of vintage furniture and modern art."},
+{w:"vindicate",pos:"v.",defs:["to clear of blame; to prove right","justify; prove right"],sent:"New forensic evidence eventually vindicated the man convicted decades earlier."},
+{w:"exemplary",pos:"adj.",defs:["serving as a model; outstanding; commendable"],sent:"The soldier received a medal for exemplary courage under fire."},
+{w:"inhibit",pos:"v.",defs:["restrain; hinder; prevent"],sent:"Fear of failure can inhibit creativity in the workplace."},
+{w:"discredit",pos:"v.",defs:["harm reputation; destroy confidence in; defame"],sent:"The scandal threatened to discredit the entire research team."},
+{w:"contemporary",pos:"adj.",defs:["modern; current","happening at the same time"],sent:"The gallery focuses exclusively on contemporary sculpture."},
+{w:"provoke",pos:"v.",defs:["anger; incite","cause; stimulate"],sent:"The senator's remarks were designed to provoke a reaction from the press."},
+{w:"solicitous",pos:"adj.",defs:["concerned; attentive; eager to help"],sent:"The nurse was solicitous, checking on the patient every few minutes."},
+{w:"daunting",pos:"adj.",defs:["intimidating; discouraging; seeming difficult"],sent:"Climbing the mountain in winter seemed like a daunting task."},
+{w:"skepticism",pos:"n.",defs:["doubt; questioning attitude"],sent:"The board greeted the new proposal with open skepticism."},
+{w:"coherent",pos:"adj.",defs:["logical; consistent; clear; intelligible"],sent:"It took him a moment to give a coherent account of the accident."},
+{w:"autonomy",pos:"n.",defs:["independence; self-governance"],sent:"The new policy grants teachers greater autonomy over their lesson plans."},
+{w:"comprehensive",pos:"adj.",defs:["thorough; inclusive; covering completely"],sent:"The consultants delivered a comprehensive review of the company's finances."},
+{w:"ambiguous",pos:"adj.",defs:["unclear, having multiple meanings; vague"],sent:"The instructions were so ambiguous that half the class misunderstood the assignment."},
+{w:"pretentious",pos:"adj.",defs:["showy, ostentatious; trying to impress"],sent:"Some found the restaurant's menu pretentious, full of unnecessary French terms."},
+{w:"rhetoric",pos:"n.",defs:["art of persuasive speaking/writing","insincere or exaggerated language"],sent:"The candidate's rhetoric grew more heated as election day approached."},
+{w:"ephemeral",pos:"adj.",defs:["short-lived; fleeting; transient"],sent:"Cherry blossoms are prized partly because their beauty is so ephemeral."},
+{w:"spurious",pos:"adj.",defs:["false; fake; not genuine; illogical"],sent:"The lawsuit was dismissed as spurious after the evidence fell apart."},
+{w:"valid",pos:"adj.",defs:["logically sound; legally acceptable; effective"],sent:"Her passport was no longer valid, so she couldn't board the flight."},
+{w:"contempt",pos:"n.",defs:["scorn; disdain; disrespect"],sent:"The judge held the witness in contempt for refusing to answer."},
+{w:"restrained",pos:"adj.",defs:["controlled; showing self-control, not excessive"],sent:"He gave a restrained response, careful not to escalate the argument."},
+{w:"mundane",pos:"adj.",defs:["ordinary; dull; commonplace"],sent:"After the excitement of the trip, everyday chores felt especially mundane."},
+{w:"impetuous",pos:"adj.",defs:["hasty, impulsive, acting without thinking"],sent:"His impetuous decision to invest his savings overnight worried his family."},
+{w:"repudiate",pos:"v.",defs:["reject, disown; deny the validity of"],sent:"The senator publicly repudiated the extremist group's endorsement."},
+{w:"definitive",pos:"adj.",defs:["conclusive, final; most authoritative"],sent:"Scientists have not yet reached a definitive answer about the planet's age."},
+{w:"debunk",pos:"v.",defs:["expose as false; disprove"],sent:"The article aimed to debunk several popular myths about nutrition."},
+{w:"divergent",pos:"adj.",defs:["differing; deviating; separating"],sent:"The two economists offered divergent explanations for the recession."},
+{w:"digress",pos:"v.",defs:["stray from the main subject"],sent:"The professor tends to digress into old stories during lectures."},
+{w:"sustain",pos:"v.",defs:["to support; to maintain; to endure","to suffer; to experience (harm)"],sent:"The bridge was designed to sustain heavy truck traffic for decades."},
+{w:"incongruous",pos:"adj.",defs:["not fitting, unsuitable, out of place"],sent:"The skyscraper looked incongruous next to the row of old cottages."},
+{w:"seldom",pos:"adv.",defs:["rarely; infrequently"],sent:"The old lighthouse is seldom visited during the winter months."},
+{w:"transient",pos:"adj.",defs:["temporary; short-term; fleeting"],sent:"The hotel mostly houses transient workers passing through for a season."},
+{w:"serene",pos:"adj.",defs:["calm, peaceful, untroubled"],sent:"The lake was perfectly serene at sunrise."},
+{w:"inconsequential",pos:"adj.",defs:["unimportant, insignificant, trivial"],sent:"Compared to the larger scandal, the missing paperwork seemed inconsequential."},
+{w:"ideal",pos:"adj.",defs:["perfect; best possible"],sent:"The clearing by the river was an ideal spot for a picnic."},
+{w:"assert",pos:"v.",defs:["state confidently; declare; insist upon"],sent:"She asserted that the contract had been signed under duress."},
+{w:"foster",pos:"v.",defs:["raise; bring up","encourage; promote growth"],sent:"The program was designed to foster collaboration between departments."},
+{w:"perplex",pos:"v.",defs:["confuse; puzzle; baffle"],sent:"The strange symbols on the wall continued to perplex archaeologists."},
+{w:"narrative",pos:"n.",defs:["story; account of events"],sent:"The film tells its narrative out of chronological order."},
+{w:"prosaic",pos:"adj.",defs:["dull; ordinary; unimaginative"],sent:"His prosaic description of the sunset failed to capture its beauty."},
+{w:"substantiate",pos:"v.",defs:["verify, support with evidence; prove"],sent:"The company could not substantiate its claims about the product's effectiveness."},
+{w:"optimistic",pos:"adj.",defs:["hopeful, expecting good outcomes"],sent:"Despite setbacks, the coach remained optimistic about the team's chances."},
+{w:"tranquil",pos:"adj.",defs:["calm, peaceful, serene"],sent:"The garden offered a tranquil escape from the noisy city streets."},
+{w:"denounce",pos:"v.",defs:["condemn publicly; criticize strongly"],sent:"World leaders quickly denounced the attack."},
+{w:"wrought",pos:"adj.",defs:["created; caused; shaped"],sent:"The gate was made of intricately wrought iron."},
+{w:"condescend",pos:"v.",defs:["act superior; patronize; talk down to"],sent:"He refused to condescend to his younger colleagues, treating them all as equals."},
+{w:"partisan",pos:"adj.",defs:["biased; one-sided"],sent:"The bill failed to pass amid partisan gridlock in Congress."}
+];
+WORDS.push(...LEADERS500_WORDS);
 WORDS.forEach((w,i)=>w.id=i);
 
 /* ============ BOOK / LEVEL STRUCTURE ============
    Each book is chunked into "levels" — the batch of new words a student
    receives at a time. As more words get added to a book's array, later
    levels automatically unlock (no manual flag needed).
+
+   NOTE: all books share the single WORDS array (so ids/mastery stay
+   globally unique) — each book's "words" is just its own slice of it.
 */
 const BOOKS = [
-  { id:'leaders300', name:'Leaders 300',        words: WORDS, chunk:100, target:300 },
-  { id:'leaders500', name:'Leaders 500 Final',  words: [],    chunk:100, target:500 },
+  { id:'leaders300', name:'Leaders 300',        words: WORDS.slice(0,300), chunk:100, target:300 },
+  { id:'leaders500', name:'Leaders 500 Final',  words: WORDS.slice(300),   chunk:100, target:500 },
   { id:'leadersAdv', name:'Leaders Advanced',   words: [],    chunk:70,  target:414 }
 ];
 function bookLevels(book){
@@ -666,6 +777,11 @@ function fmtDefs(wordObj){
   }).join("<br>");
 }
 function numLabel(wordObj){
+  const book = currentBook();
+  if(book){
+    const idx = book.words.findIndex(w=>w.id===wordObj.id);
+    if(idx!==-1) return "#"+(idx+1);
+  }
   return "#"+(wordObj.id+1);
 }
 function norm(s){
