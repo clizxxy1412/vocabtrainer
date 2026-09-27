@@ -298,7 +298,7 @@
    running, forces a real reload so the update takes effect immediately —
    this defeats iOS/Android home-screen-bookmark caching.
 */
-const APP_VERSION = "2026-07-25.16";
+const APP_VERSION = "2026-09-27.1";
 (async function checkForUpdate(){
   try{
     const res = await fetch(location.pathname + "?_check=" + Date.now(), {cache:"no-store"});
@@ -1736,6 +1736,11 @@ async function boot(){
     renderFullTestResumeChoice(savedFT);
     return;
   }
+  const savedFR = await loadTriageState();
+  if(savedFR && savedFR.pendingId != null){
+    renderTriageResumeChoice(savedFR);
+    return;
+  }
   await goToSavedNavOrBookSelect();
 }
 
@@ -1752,36 +1757,6 @@ async function goToSavedNavOrBookSelect(){
     }
   }
   renderBookSelect();
-}
-
-// Shown on load if a Learning Mode session was interrupted (e.g. the OS
-// reloaded a backgrounded mobile tab) before it was properly ended.
-function renderResumeChoice(saved){
-  const book = BOOKS.find(b=>b.id===saved.bookId);
-  const levels = book ? bookLevels(book) : [];
-  const lvl = levels[saved.levelIdx];
-  const bookName = book ? book.name : 'Vocab Trainer';
-  const levelLabel = lvl ? lvl.label : '';
-  const seenCount = saved.sessionSeen ? saved.sessionSeen.length : 0;
-  nav = { bookId: saved.bookId, levelIdx: saved.levelIdx };
-  updateMasthead();
-  app.innerHTML = `
-    <div class="catalog-row"><span>${bookName}</span><span>Unfinished Session</span></div>
-    <h2 class="section-title">Pick up where you left off?</h2>
-    <div class="diag-sub" style="text-align:left;">
-      Learning Mode, Words ${levelLabel} — ${saved.answered} answered so far (${saved.correct} correct),
-      ${seenCount}/${saved.allIds.length} words introduced.
-    </div>
-    <div class="btn-row">
-      <button class="btn" id="resume-btn">Resume Session</button>
-      <button class="btn secondary" id="fresh-btn">Start Fresh</button>
-    </div>
-  `;
-  document.getElementById('resume-btn').onclick = ()=>resumeLearning(saved);
-  document.getElementById('fresh-btn').onclick = async ()=>{
-    await clearLearnState();
-    await goToSavedNavOrBookSelect();
-  };
 }
 
 function totalIntroduced(){
@@ -1826,6 +1801,11 @@ function renderBookSelect(){
   updateMasthead();
   app.innerHTML = `
     <div class="catalog-row"><span>Word Lists</span><span>${BOOKS.length} available</span></div>
+    <div class="mode-card" id="final-review-card" style="border-color:var(--accent); margin-bottom:16px;">
+      <div><div class="mtitle">🎯 Final Review <span style="font-size:12px;color:var(--accent);">ALL BOOKS</span></div>
+      <div class="mdesc">Cumulative reinforcement across all 1,214 words. Fast tap-through triage, then real recall drilling only on what needs it.</div></div>
+      <div class="mnum">→</div>
+    </div>
     <h2 class="section-title">Choose a word list</h2>
     <div class="mode-grid">
       ${BOOKS.map((b,i)=>{
@@ -1839,6 +1819,7 @@ function renderBookSelect(){
       }).join('')}
     </div>
   `;
+  document.getElementById('final-review-card').onclick = renderFinalReviewSetup;
   BOOKS.forEach(b=>{
     const el = document.getElementById('book-'+b.id);
     el.onclick = ()=>{
@@ -1998,6 +1979,178 @@ function renderBrowseList(ids, label){
   `;
   document.getElementById('back-browse').onclick = renderModeSelect;
   document.getElementById('browse-home').onclick = renderModeSelect;
+}
+
+/* ============ FINAL REVIEW MODE ============
+   Cross-book cumulative reinforcement close to test day, when redoing
+   the full leveled progression isn't realistic. Two stages:
+
+   1. Fast triage — pure self-report ("still know it" / "not sure"),
+      no typing, so hundreds of words can be screened in minutes.
+      Words with a real history of getting missed more than gotten
+      right (per MASTERY, already tracked by every other mode) skip
+      this step entirely and go straight to stage 2 — objective
+      evidence beats a fast guess.
+   2. Real recall — every "not sure" plus every historically-weak word
+      gets handed to the EXACT SAME Learning Mode engine used
+      everywhere else (startLearning), unmodified. No new recall logic;
+      this stage's whole job is just building the right id list.
+*/
+let frState = null;
+
+async function saveTriageState(){
+  if(!frState) return;
+  try{ localStorage.setItem(LS_PREFIX+'triageState', JSON.stringify(frState)); }catch(e){}
+}
+async function loadTriageState(){
+  try{
+    const raw = localStorage.getItem(LS_PREFIX+'triageState');
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+async function clearTriageState(){
+  try{ localStorage.removeItem(LS_PREFIX+'triageState'); }catch(e){}
+}
+
+function bookNameForId(id){
+  const b = BOOKS.find(bk=>bk.words.some(w=>w.id===id));
+  return b ? b.name : '';
+}
+
+function renderFinalReviewSetup(){
+  const weakCount = weakWordIds().length;
+  app.innerHTML = `
+    <div class="catalog-row"><span>Final Review</span><span>All ${WORDS.length} words</span></div>
+    <div class="back-link" id="back-books">← Back</div>
+    <h2 class="section-title" style="margin-top:12px;">How much time do you have?</h2>
+    <div class="diag-sub" style="text-align:left;">${weakCount} word(s) with a history of mistakes are included no matter what you pick below.</div>
+    <div class="mode-grid" style="margin-top:14px;">
+      <div class="mode-card" id="fr-size-quick">
+        <div><div class="mtitle">Quick</div>
+        <div class="mdesc">~150 words triaged, plus anything historically weak.</div></div>
+        <div class="mnum">150</div>
+      </div>
+      <div class="mode-card" id="fr-size-standard">
+        <div><div class="mtitle">Standard</div>
+        <div class="mdesc">~400 words triaged, plus anything historically weak.</div></div>
+        <div class="mnum">400</div>
+      </div>
+      <div class="mode-card" id="fr-size-full">
+        <div><div class="mtitle">Everything</div>
+        <div class="mdesc">All ${WORDS.length} words get a triage pass.</div></div>
+        <div class="mnum">${WORDS.length}</div>
+      </div>
+    </div>
+  `;
+  document.getElementById('back-books').onclick = renderBookSelect;
+  document.getElementById('fr-size-quick').onclick = ()=>frStart(150);
+  document.getElementById('fr-size-standard').onclick = ()=>frStart(400);
+  document.getElementById('fr-size-full').onclick = ()=>frStart(Infinity);
+}
+
+function frStart(targetSize){
+  clearTriageState();
+  const weak = weakWordIds();
+  const nonWeak = shuffle(WORDS.map(w=>w.id).filter(id=>!weak.includes(id)));
+  const budget = targetSize === Infinity ? nonWeak.length : Math.max(0, targetSize - weak.length);
+  const triagePool = nonWeak.slice(0, budget);
+  frState = {
+    weakIds: weak,
+    triageQueue: triagePool,
+    pendingId: null,
+    forgotIds: [],
+    knowCount: 0,
+    totalTriageCount: triagePool.length
+  };
+  frNext();
+}
+
+function frNext(){
+  const s = frState;
+  if(s.triageQueue.length === 0){
+    frShowHandoff();
+    return;
+  }
+  s.pendingId = s.triageQueue[0];
+  saveTriageState();
+  renderTriageCard(s.pendingId);
+}
+
+function renderTriageResumeChoice(saved){
+  frState = saved;
+  const done = saved.knowCount + saved.forgotIds.length;
+  app.innerHTML = `
+    <div class="catalog-row"><span>Final Review</span><span>Unfinished Triage</span></div>
+    <h2 class="section-title">Pick up where you left off?</h2>
+    <div class="diag-sub" style="text-align:left;">${done}/${saved.totalTriageCount} words triaged so far.</div>
+    <div class="btn-row">
+      <button class="btn" id="fr-resume-btn">Resume Triage</button>
+      <button class="btn secondary" id="fr-fresh-btn">Start Fresh</button>
+    </div>
+  `;
+  document.getElementById('fr-resume-btn').onclick = ()=>renderTriageCard(frState.pendingId);
+  document.getElementById('fr-fresh-btn').onclick = async ()=>{
+    await clearTriageState();
+    await goToSavedNavOrBookSelect();
+  };
+}
+
+function renderTriageCard(id){
+  const s = frState;
+  const word = WORDS[id];
+  const done = s.knowCount + s.forgotIds.length;
+  app.innerHTML = `
+    <div class="catalog-row"><span>Final Review · Triage</span><span>${done}/${s.totalTriageCount}</span></div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${s.totalTriageCount? (done/s.totalTriageCount)*100 : 0}%"></div></div>
+    <div class="word-display">
+      <div class="pos-tag">${bookNameForId(id)} · ${word.pos}</div>
+      <div class="word">${word.w}</div>
+    </div>
+    <div class="btn-row" style="margin-top:24px;">
+      <button class="btn green" id="fr-know">✓ Still Know It</button>
+      <button class="btn red" id="fr-forgot">✗ Not Sure</button>
+    </div>
+  `;
+  document.getElementById('fr-know').onclick = ()=>{
+    s.triageQueue.shift();
+    s.knowCount++;
+    frNext();
+  };
+  document.getElementById('fr-forgot').onclick = ()=>{
+    s.triageQueue.shift();
+    s.forgotIds.push(id);
+    frNext();
+  };
+}
+
+function frShowHandoff(){
+  const s = frState;
+  clearTriageState();
+  const combined = [...new Set([...s.weakIds, ...s.forgotIds])];
+  if(combined.length === 0){
+    app.innerHTML = `
+      <div class="catalog-row"><span>Final Review</span><span>Triage Complete</span></div>
+      <div class="diag-score">🎉</div>
+      <div class="diag-sub">Nothing flagged — no history of mistakes, and you know everything you triaged.</div>
+      <div class="btn-row">
+        <button class="btn secondary" id="fr-home">Back to Menu</button>
+      </div>
+    `;
+    document.getElementById('fr-home').onclick = renderBookSelect;
+    return;
+  }
+  app.innerHTML = `
+    <div class="catalog-row"><span>Final Review</span><span>Triage Complete</span></div>
+    <div class="diag-score">${combined.length}</div>
+    <div class="diag-sub">word(s) to actually drill right now</div>
+    <div class="diag-sub" style="text-align:left;margin-top:14px;">${s.weakIds.length} historically weak + ${s.forgotIds.length} flagged unsure during triage (overlap removed).</div>
+    <div class="btn-row">
+      <button class="btn" id="fr-start-drill">Start Recall Drill</button>
+      <button class="btn secondary" id="fr-home">Back to Menu</button>
+    </div>
+  `;
+  document.getElementById('fr-start-drill').onclick = ()=>startLearning(shuffle(combined));
+  document.getElementById('fr-home').onclick = renderBookSelect;
 }
 
 /* ============ LEARNING MODE ============
